@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Exam - Student Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .option {
+            background: white;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .option input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress {
+            background: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: #667eea;
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .nav-buttons button {
+            flex: 1;
+        }
+
+        #malpracticeWarning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #dc3545;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 10000;
+            text-align: center;
+            min-width: 400px;
+        }
+
+        #malpracticeWarning h2 {
+            margin-bottom: 15px;
+        }
+
+        .scoreboard {
+            margin-top: 30px;
+        }
+
+        .scoreboard table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .scoreboard th,
+        .scoreboard td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .scoreboard th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .scoreboard tr:hover {
+            background: #f5f5f5;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .rank-1 { background: #ffd700; color: #333; }
+        .rank-2 { background: #c0c0c0; color: #333; }
+        .rank-3 { background: #cd7f32; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Registration Screen -->
+        <div id="registrationScreen">
+            <h1>📝 Quiz Examination Portal</h1>
+            <div class="alert alert-info" id="examStatusAlert">
+                Checking exam status...
+            </div>
+            <div class="form-group">
+                <label for="studentName">Enter Your Name</label>
+                <input type="text" id="studentName" placeholder="Full Name" required>
+            </div>
+            <button onclick="register()" id="registerBtn">Start Exam</button>
+        </div>
+
+        <!-- Exam Screen -->
+        <div id="examScreen" class="hidden">
+            <h1>🎯 Quiz Examination</h1>
+            <div class="alert alert-warning" id="warningDisplay" style="display: none;"></div>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div id="questionContainer"></div>
+            <div class="nav-buttons">
+                <button onclick="previousQuestion()" id="prevBtn">Previous</button>
+                <button onclick="nextQuestion()" id="nextBtn">Next</button>
+                <button onclick="submitExam()" id="submitBtn" class="hidden">Submit Exam</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="hidden">
+            <h1>🎊 Exam Completed!</h1>
+            <div class="alert alert-success">
+                <h2 id="scoreDisplay"></h2>
+            </div>
+            <button onclick="viewScoreboard()">View Scoreboard</button>
+        </div>
+
+        <!-- Scoreboard Screen -->
+        <div id="scoreboardScreen" class="hidden">
+            <h1>🏆 Scoreboard</h1>
+            <div class="scoreboard">
+                <table id="scoreboardTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                            <th>Malpractice</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboardBody"></tbody>
+                </table>
+            </div>
+            <button onclick="location.reload()" style="margin-top: 20px;">Back to Home</button>
+        </div>
+    </div>
+
+    <!-- Malpractice Warning Modal -->
+    <div id="malpracticeWarning" class="hidden">
+        <h2>⚠️ MALPRACTICE DETECTED!</h2>
+        <p id="malpracticeMessage"></p>
+        <button onclick="closeMalpracticeWarning()" style="margin-top: 15px; background: white; color: #dc3545;">I Understand</button>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let answers = {};
+        let malpracticeCount = 0;
+        let isExamActive = false;
+
+        // Check exam status on load
+        async function checkExamStatus() {
+            try {
+                const res = await fetch('/api/exam-status');
+                const data = await res.json();
+                isExamActive = data.isActive;
+                
+                const alert = document.getElementById('examStatusAlert');
+                if (isExamActive) {
+                    alert.className = 'alert alert-success';
+                    alert.textContent = '✅ Exam is currently active. You can register now.';
+                    document.getElementById('registerBtn').disabled = false;
+                } else {
+                    alert.className = 'alert alert-danger';
+                    alert.textContent = '❌ No active exam. Please wait for admin to start the exam.';
+                    document.getElementById('registerBtn').disabled = true;
+                }
+            } catch (error) {
+                console.error('Failed to check exam status:', error);
+            }
+        }
+
+        checkExamStatus();
+        setInterval(checkExamStatus, 5000);
+
+        // Register student
+        async function register() {
+            const name = document.getElementById('studentName').value.trim();
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    await loadQuestions();
+                    startExam();
+                } else {
+                    alert(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                alert('Failed to register. Please try again.');
+            }
+        }
+
+        // Load questions
+        async function loadQuestions() {
+            const res = await fetch('/api/questions');
+            questions = await res.json();
+        }
+
+        // Start exam
+        function startExam() {
+            document.getElementById('registrationScreen').classList.add('hidden');
+            document.getElementById('examScreen').classList.remove('hidden');
+            
+            enableFullscreen();
+            setupMalpracticeDetection();
+            displayQuestion();
+        }
+
+        // Enable fullscreen
+        function enableFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        }
+
+        // Setup malpractice detection
+        function setupMalpracticeDetection() {
+            // Detect tab visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    reportMalpractice('You switched tabs or minimized the browser!');
+                }
+            });
+
+            // Detect fullscreen exit
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    reportMalpractice('You exited fullscreen mode!');
+                    enableFullscreen();
+                }
+            });
+
+            // Prevent right-click
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+
+            // Detect window blur
+            window.addEventListener('blur', () => {
+                reportMalpractice('You switched to another window!');
+            });
+        }
+
+        // Report malpractice
+        async function reportMalpractice(message) {
+            malpracticeCount++;
+            
+            await fetch('/api/malpractice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            document.getElementById('malpracticeMessage').textContent = 
+                `${message}\n\nWarning ${malpracticeCount}/3\n\nFurther violations will be recorded.`;
+            document.getElementById('malpracticeWarning').classList.remove('hidden');
+
+            const warningDisplay = document.getElementById('warningDisplay');
+            warningDisplay.textContent = `⚠️ Malpractice Count: ${malpracticeCount}`;
+            warningDisplay.style.display = 'block';
+        }
+
+        function closeMalpracticeWarning() {
+            document.getElementById('malpracticeWarning').classList.add('hidden');
+        }
+
+        // Display question
+        function displayQuestion() {
+            if (questions.length === 0) return;
+
+            const question = questions[currentQuestionIndex];
+            const container = document.getElementById('questionContainer');
+            
+            container.innerHTML = `
+                <div class="question-card">
+                    <div class="question-text">
+                        Question ${currentQuestionIndex + 1} of ${questions.length}: ${question.question}
+                    </div>
+                    <label class="option">
+                        <input type="radio" name="answer" value="a" ${answers[question.id] === 'a' ? 'checked' : ''}>
+                        A. ${question.option_a}
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="answer" value="b" ${answers[question.id] === 'b' ? 'checked' : ''}>
+                        B. ${question.option_b}
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="answer" value="c" ${answers[question.id] === 'c' ? 'checked' : ''}>
+                        C. ${question.option_c}
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="answer" value="d" ${answers[question.id] === 'd' ? 'checked' : ''}>
+                        D. ${question.option_d}
+                    </label>
+                </div>
+            `;
+
+            // Save answer on selection
+            document.querySelectorAll('input[name="answer"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    answers[question.id] = e.target.value;
+                    submitAnswer(question.id, e.target.value);
+                });
+            });
+
+            updateProgress();
+            updateNavButtons();
+        }
+
+        // Submit answer
+        async function submitAnswer(questionId, answer) {
+            await fetch('/api/submit-answer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questionId, answer })
+            });
+        }
+
+        // Navigation
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        function updateNavButtons() {
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').classList.toggle('hidden', currentQuestionIndex === questions.length - 1);
+            document.getElementById('submitBtn').classList.toggle('hidden', currentQuestionIndex !== questions.length - 1);
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Submit exam
+        async function submitExam() {
+            if (!confirm('Are you sure you want to submit the exam? You cannot change answers after submission.')) {
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/complete-exam', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await res.json();
+                
+                document.getElementById('examScreen').classList.add('hidden');
+                document.getElementById('resultsScreen').classList.remove('hidden');
+                document.getElementById('scoreDisplay').textContent = 
+                    `You scored ${data.score} out of ${data.total}`;
+
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+            } catch (error) {
+                alert('Failed to submit exam. Please try again.');
+            }
+        }
+
+        // View scoreboard
+        async function viewScoreboard() {
+            try {
+                const res = await fetch('/api/scoreboard');
+                const scores = await res.json();
+
+                const tbody = document.getElementById('scoreboardBody');
+                tbody.innerHTML = scores.map((score, index) => `
+                    <tr>
+                        <td><span class="rank-badge ${index < 3 ? 'rank-' + (index + 1) : ''}">#${index + 1}</span></td>
+                        <td>${score.name}</td>
+                        <td>${score.score}/${score.total_questions}</td>
+                        <td>${score.malpractice_count}</td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('resultsScreen').classList.add('hidden');
+                document.getElementById('scoreboardScreen').classList.remove('hidden');
+            } catch (error) {
+                alert('Failed to load scoreboard');
+            }
+        }
+    </script>
+</body>
+</html>

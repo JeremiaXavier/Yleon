@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #1e3c72;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            color: #1e3c72;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1e3c72;
+        }
+
+        .exam-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .exam-controls button {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-start {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #218838;
+        }
+
+        .btn-end {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-end:hover {
+            background: #c82333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: #1e3c72;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #152d5c;
+        }
+
+        .questions-list {
+            margin-top: 20px;
+        }
+
+        .question-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #dee2e6;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .option-item {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .correct-answer {
+            background: #d4edda;
+            font-weight: 600;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .exam-controls {
+                flex-direction: column;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .scoreboard {
+            margin-top: 20px;
+        }
+
+        .scoreboard table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .scoreboard th,
+        .scoreboard td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .scoreboard th {
+            background: #1e3c72;
+            color: white;
+            font-weight: 600;
+        }
+
+        .scoreboard tr:hover {
+            background: #f5f5f5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Quiz Admin Panel</h1>
+            <p>Manage exams and questions</p>
+        </div>
+
+        <div class="content">
+            <!-- Exam Control Section -->
+            <div class="section">
+                <h2 class="section-title">Exam Control</h2>
+                <div style="margin-bottom: 20px;">
+                    <strong>Current Status: </strong>
+                    <span class="status-badge" id="examStatus">Checking...</span>
+                </div>
+                <div class="exam-controls">
+                    <button class="btn-start" onclick="startExam()">🟢 Start Exam</button>
+                    <button class="btn-end" onclick="endExam()">🔴 End Exam</button>
+                </div>
+                <div id="alertBox"></div>
+            </div>
+
+            <!-- Add Question Section -->
+            <div class="section">
+                <h2 class="section-title">Add New Question</h2>
+                <form onsubmit="addQuestion(event)">
+                    <div class="form-group">
+                        <label for="question">Question *</label>
+                        <textarea id="question" required placeholder="Enter your question here..."></textarea>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="optionA">Option A *</label>
+                            <input type="text" id="optionA" required placeholder="Option A">
+                        </div>
+                        <div class="form-group">
+                            <label for="optionB">Option B *</label>
+                            <input type="text" id="optionB" required placeholder="Option B">
+                        </div>
+                        <div class="form-group">
+                            <label for="optionC">Option C *</label>
+                            <input type="text" id="optionC" required placeholder="Option C">
+                        </div>
+                        <div class="form-group">
+                            <label for="optionD">Option D *</label>
+                            <input type="text" id="optionD" required placeholder="Option D">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="correctAnswer">Correct Answer *</label>
+                        <select id="correctAnswer" required>
+                            <option value="">Select correct answer</option>
+                            <option value="a">A</option>
+                            <option value="b">B</option>
+                            <option value="c">C</option>
+                            <option value="d">D</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn">➕ Add Question</button>
+                </form>
+            </div>
+
+            <!-- Questions List Section -->
+            <div class="section">
+                <h2 class="section-title">All Questions</h2>
+                <div id="questionsList" class="questions-list">
+                    <div class="loading">Loading questions...</div>
+                </div>
+            </div>
+
+            <!-- Scoreboard Section -->
+            <div class="section">
+                <h2 class="section-title">Live Scoreboard</h2>
+                <button class="btn" onclick="loadScoreboard()" style="margin-bottom: 15px;">🔄 Refresh Scoreboard</button>
+                <div class="scoreboard">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Score</th>
+                                <th>Malpractice</th>
+                                <th>Completed At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoreboardBody">
+                            <tr>
+                                <td colspan="5" class="loading">Click refresh to load scoreboard</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check exam status
+        async function checkExamStatus() {
+            try {
+                const res = await fetch('/api/exam-status');
+                const data = await res.json();
+                const statusEl = document.getElementById('examStatus');
+                
+                if (data.isActive) {
+                    statusEl.textContent = 'Active';
+                    statusEl.className = 'status-badge status-active';
+                } else {
+                    statusEl.textContent = 'Inactive';
+                    statusEl.className = 'status-badge status-inactive';
+                }
+            } catch (error) {
+                console.error('Failed to check status:', error);
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type = 'success') {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertBox.innerHTML = '';
+            }, 5000);
+        }
+
+        // Start exam
+        async function startExam() {
+            if (!confirm('Start the exam? Students will be able to take the exam.')) return;
+
+            try {
+                const res = await fetch('/api/admin/start-exam', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showAlert('✅ Exam started successfully!', 'success');
+                    checkExamStatus();
+                } else {
+                    showAlert('❌ Failed to start exam', 'error');
+                }
+            } catch (error) {
+                showAlert('❌ Error starting exam', 'error');
+            }
+        }
+
+        // End exam
+        async function endExam() {
+            if (!confirm('End the exam? No more students can take the exam.')) return;
+
+            try {
+                const res = await fetch('/api/admin/end-exam', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showAlert('✅ Exam ended successfully!', 'success');
+                    checkExamStatus();
+                } else {
+                    showAlert('❌ Failed to end exam', 'error');
+                }
+            } catch (error) {
+                showAlert('❌ Error ending exam', 'error');
+            }
+        }
+
+        // Add question
+        async function addQuestion(e) {
+            e.preventDefault();
+
+            const question = {
+                question: document.getElementById('question').value,
+                option_a: document.getElementById('optionA').value,
+                option_b: document.getElementById('optionB').value,
+                option_c: document.getElementById('optionC').value,
+                option_d: document.getElementById('optionD').value,
+                correct_answer: document.getElementById('correctAnswer').value
+            };
+
+            try {
+                const res = await fetch('/api/admin/questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(question)
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showAlert('✅ Question added successfully!', 'success');
+                    e.target.reset();
+                    loadQuestions();
+                } else {
+                    showAlert('❌ Failed to add question', 'error');
+                }
+            } catch (error) {
+                showAlert('❌ Error adding question', 'error');
+            }
+        }
+
+        // Load questions
+        async function loadQuestions() {
+            try {
+                const res = await fetch('/api/admin/questions');
+                const questions = await res.json();
+
+                const container = document.getElementById('questionsList');
+                
+                if (questions.length === 0) {
+                    container.innerHTML = '<div class="loading">No questions added yet.</div>';
+                    return;
+                }
+
+                container.innerHTML = questions.map((q, index) => `
+                    <div class="question-item">
+                        <div class="question-header">
+                            <div class="question-text">${index + 1}. ${q.question}</div>
+                            <button class="delete-btn" onclick="deleteQuestion(${q.id})">🗑️ Delete</button>
+                        </div>
+                        <div class="options-grid">
+                            <div class="option-item ${q.correct_answer.toLowerCase() === 'a' ? 'correct-answer' : ''}">
+                                A. ${q.option_a}
+                            </div>
+                            <div class="option-item ${q.correct_answer.toLowerCase() === 'b' ? 'correct-answer' : ''}">
+                                B. ${q.option_b}
+                            </div>
+                            <div class="option-item ${q.correct_answer.toLowerCase() === 'c' ? 'correct-answer' : ''}">
+                                C. ${q.option_c}
+                            </div>
+                            <div class="option-item ${q.correct_answer.toLowerCase() === 'd' ? 'correct-answer' : ''}">
+                                D. ${q.option_d}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('questionsList').innerHTML = 
+                    '<div class="loading">Failed to load questions</div>';
+            }
+        }
+
+        // Delete question
+        async function deleteQuestion(id) {
+            if (!confirm('Delete this question?')) return;
+
+            try {
+                const res = await fetch(`/api/admin/questions/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showAlert('✅ Question deleted successfully!', 'success');
+                    loadQuestions();
+                } else {
+                    showAlert('❌ Failed to delete question', 'error');
+                }
+            } catch (error) {
+                showAlert('❌ Error deleting question', 'error');
+            }
+        }
+
+        // Load scoreboard
+        async function loadScoreboard() {
+            try {
+                const res = await fetch('/api/scoreboard');
+                const scores = await res.json();
+
+                const tbody = document.getElementById('scoreboardBody');
+                
+                if (scores.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="loading">No results yet</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = scores.map((score, index) => `
+                    <tr>
+                        <td><strong>#${index + 1}</strong></td>
+                        <td>${score.name}</td>
+                        <td><strong>${score.score}</strong>/${score.total_questions}</td>
+                        <td>${score.malpractice_count > 0 ? '⚠️ ' + score.malpractice_count : '✅ 0'}</td>
+                        <td>${new Date(score.completed_at).toLocaleString()}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                document.getElementById('scoreboardBody').innerHTML = 
+                    '<tr><td colspan="5" class="loading">Failed to load scoreboard</td></tr>';
+            }
+        }
+
+        // Initialize
+        checkExamStatus();
+        loadQuestions();
+        setInterval(checkExamStatus, 5000);
+    </script>
+</body>
+</html>
