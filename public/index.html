@@ -1,565 +1,613 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Exam - Student Portal</title>
+    <title>Quiz Examination Portal</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+        .exam-container {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
-
-        .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
-        }
-
-        h1 {
-            color: #667eea;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background: #5568d3;
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .alert-info {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .question-card {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .question-text {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .option {
-            background: white;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .option:hover {
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
-
-        .option input[type="radio"] {
-            margin-right: 10px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .progress {
-            background: #e0e0e0;
-            height: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            background: #667eea;
-            height: 100%;
-            transition: width 0.3s;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .nav-buttons button {
-            flex: 1;
-        }
-
-        #malpracticeWarning {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #dc3545;
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            z-index: 10000;
-            text-align: center;
-            min-width: 400px;
-        }
-
-        #malpracticeWarning h2 {
-            margin-bottom: 15px;
-        }
-
-        .scoreboard {
-            margin-top: 30px;
-        }
-
-        .scoreboard table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .scoreboard th,
-        .scoreboard td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .scoreboard th {
-            background: #667eea;
-            color: white;
-            font-weight: 600;
-        }
-
-        .scoreboard tr:hover {
-            background: #f5f5f5;
-        }
-
-        .rank-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .rank-1 { background: #ffd700; color: #333; }
-        .rank-2 { background: #c0c0c0; color: #333; }
-        .rank-3 { background: #cd7f32; color: white; }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <!-- Registration Screen -->
-        <div id="registrationScreen">
-            <h1>📝 Quiz Examination Portal</h1>
-            <div class="alert alert-info" id="examStatusAlert">
-                Checking exam status...
-            </div>
-            <div class="form-group">
-                <label for="studentName">Enter Your Name</label>
-                <input type="text" id="studentName" placeholder="Full Name" required>
-            </div>
-            <button onclick="register()" id="registerBtn">Start Exam</button>
-        </div>
+    <div id="root"></div>
 
-        <!-- Exam Screen -->
-        <div id="examScreen" class="hidden">
-            <h1>🎯 Quiz Examination</h1>
-            <div class="alert alert-warning" id="warningDisplay" style="display: none;"></div>
-            <div class="progress">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div id="questionContainer"></div>
-            <div class="nav-buttons">
-                <button onclick="previousQuestion()" id="prevBtn">Previous</button>
-                <button onclick="nextQuestion()" id="nextBtn">Next</button>
-                <button onclick="submitExam()" id="submitBtn" class="hidden">Submit Exam</button>
-            </div>
-        </div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-        <!-- Results Screen -->
-        <div id="resultsScreen" class="hidden">
-            <h1>🎊 Exam Completed!</h1>
-            <div class="alert alert-success">
-                <h2 id="scoreDisplay"></h2>
-            </div>
-            <button onclick="viewScoreboard()">View Scoreboard</button>
-        </div>
+        function App() {
+            const [screen, setScreen] = useState('login');
+            const [examStatus, setExamStatus] = useState({ isActive: false, duration: 60 });
+            const [studentName, setStudentName] = useState('');
+            const [questions, setQuestions] = useState([]);
+            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [timeRemaining, setTimeRemaining] = useState(0);
+            const [score, setScore] = useState(null);
+            const [scoreboard, setScoreboard] = useState([]);
+            const [isAutoSubmit, setIsAutoSubmit] = useState(false);
+            const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'single'
 
-        <!-- Scoreboard Screen -->
-        <div id="scoreboardScreen" class="hidden">
-            <h1>🏆 Scoreboard</h1>
-            <div class="scoreboard">
-                <table id="scoreboardTable">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Name</th>
-                            <th>Score</th>
-                            <th>Malpractice</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scoreboardBody"></tbody>
-                </table>
-            </div>
-            <button onclick="location.reload()" style="margin-top: 20px;">Back to Home</button>
-        </div>
-    </div>
+            const examStartTimeRef = useRef(null);
+            const timerIntervalRef = useRef(null);
+            const isSubmittingRef = useRef(false);
 
-    <!-- Malpractice Warning Modal -->
-    <div id="malpracticeWarning" class="hidden">
-        <h2>⚠️ MALPRACTICE DETECTED!</h2>
-        <p id="malpracticeMessage"></p>
-        <button onclick="closeMalpracticeWarning()" style="margin-top: 15px; background: white; color: #dc3545;">I Understand</button>
-    </div>
+            useEffect(() => {
+                checkExamStatus();
+                const interval = setInterval(checkExamStatus, 5000);
+                return () => clearInterval(interval);
+            }, []);
 
-    <script>
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let answers = {};
-        let malpracticeCount = 0;
-        let isExamActive = false;
-
-        // Check exam status on load
-        async function checkExamStatus() {
-            try {
-                const res = await fetch('/api/exam-status');
-                const data = await res.json();
-                isExamActive = data.isActive;
-                
-                const alert = document.getElementById('examStatusAlert');
-                if (isExamActive) {
-                    alert.className = 'alert alert-success';
-                    alert.textContent = '✅ Exam is currently active. You can register now.';
-                    document.getElementById('registerBtn').disabled = false;
-                } else {
-                    alert.className = 'alert alert-danger';
-                    alert.textContent = '❌ No active exam. Please wait for admin to start the exam.';
-                    document.getElementById('registerBtn').disabled = true;
+            useEffect(() => {
+                if (screen === 'exam') {
+                    disableKeys();
+                    return () => enableKeys();
                 }
-            } catch (error) {
-                console.error('Failed to check exam status:', error);
-            }
-        }
+            }, [screen]);
 
-        checkExamStatus();
-        setInterval(checkExamStatus, 5000);
+            const checkExamStatus = async () => {
+                try {
+                    const res = await fetch('/api/exam-status');
+                    const data = await res.json();
+                    setExamStatus(data);
+                } catch (error) {
+                    console.error('Failed to check exam status:', error);
+                }
+            };
 
-        // Register student
-        async function register() {
-            const name = document.getElementById('studentName').value.trim();
-            if (!name) {
-                alert('Please enter your name');
-                return;
-            }
+            const disableKeys = () => {
+                const preventKeys = (e) => {
+                    if (
+                        e.key === 'F12' ||
+                        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                        (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                        (e.ctrlKey && e.key === 'u') ||
+                        (e.ctrlKey && e.key === 's') ||
+                        (e.ctrlKey && e.key === 'p') ||
+                        e.key === 'PrintScreen'
+                    ) {
+                        e.preventDefault();
+                        return false;
+                    }
+                };
+                document.addEventListener('keydown', preventKeys);
+                document.addEventListener('contextmenu', (e) => e.preventDefault());
+            };
 
-            try {
-                const res = await fetch('/api/register', {
+            const enableKeys = () => {
+                document.removeEventListener('keydown', () => { });
+                document.removeEventListener('contextmenu', () => { });
+            };
+
+            const register = async () => {
+                if (!studentName.trim()) {
+                    alert('Please enter your name');
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: studentName })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        await loadQuestions();
+                        startExam();
+                    } else {
+                        alert(data.error || 'Registration failed');
+                    }
+                } catch (error) {
+                    alert('Failed to register. Please try again.');
+                }
+            };
+
+            const loadQuestions = async () => {
+                const res = await fetch('/api/questions');
+                const data = await res.json();
+                setQuestions(data);
+            };
+
+            const startExam = () => {
+                setScreen('exam');
+                examStartTimeRef.current = Date.now();
+                setTimeRemaining(examStatus.duration * 60);
+                enableFullscreen();
+                startTimer();
+            };
+
+            const enableFullscreen = () => {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(() => { });
+                }
+            };
+
+            const startTimer = () => {
+                timerIntervalRef.current = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - examStartTimeRef.current) / 1000);
+                    const remaining = Math.max(0, (examStatus.duration * 60) - elapsed);
+                    setTimeRemaining(remaining);
+
+                    if (remaining <= 0) {
+                        clearInterval(timerIntervalRef.current);
+                        autoSubmitExam();
+                    }
+                }, 1000);
+            };
+
+            const handleAnswerChange = async (questionId, answer) => {
+                setAnswers({ ...answers, [questionId]: answer });
+
+                await fetch('/api/submit-answer', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
+                    body: JSON.stringify({ questionId, answer })
                 });
+            };
 
-                const data = await res.json();
-                if (data.success) {
-                    await loadQuestions();
-                    startExam();
-                } else {
-                    alert(data.error || 'Registration failed');
+            const autoSubmitExam = async () => {
+                if (isSubmittingRef.current) return;
+                isSubmittingRef.current = true;
+                setIsAutoSubmit(true);
+                await submitExam(true);
+            };
+
+            const submitExam = async (autoSubmitted = false) => {
+                if (isSubmittingRef.current && !autoSubmitted) return;
+
+                if (!autoSubmitted) {
+                    if (!window.confirm('Are you sure you want to submit the exam?')) {
+                        return;
+                    }
                 }
-            } catch (error) {
-                alert('Failed to register. Please try again.');
-            }
-        }
 
-        // Load questions
-        async function loadQuestions() {
-            const res = await fetch('/api/questions');
-            questions = await res.json();
-        }
+                isSubmittingRef.current = true;
 
-        // Start exam
-        function startExam() {
-            document.getElementById('registrationScreen').classList.add('hidden');
-            document.getElementById('examScreen').classList.remove('hidden');
-            
-            enableFullscreen();
-            setupMalpracticeDetection();
-            displayQuestion();
-        }
-
-        // Enable fullscreen
-        function enableFullscreen() {
-            const elem = document.documentElement;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
-        }
-
-        // Setup malpractice detection
-        function setupMalpracticeDetection() {
-            // Detect tab visibility change
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    reportMalpractice('You switched tabs or minimized the browser!');
+                if (timerIntervalRef.current) {
+                    clearInterval(timerIntervalRef.current);
                 }
-            });
 
-            // Detect fullscreen exit
-            document.addEventListener('fullscreenchange', () => {
-                if (!document.fullscreenElement) {
-                    reportMalpractice('You exited fullscreen mode!');
-                    enableFullscreen();
+                try {
+                    const res = await fetch('/api/complete-exam', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ autoSubmitted })
+                    });
+
+                    const data = await res.json();
+                    setScore(data);
+                    setScreen('results');
+
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen().catch(() => { });
+                    }
+                } catch (error) {
+                    isSubmittingRef.current = false;
+                    alert('Failed to submit exam. Please try again.');
                 }
-            });
+            };
 
-            // Prevent right-click
-            document.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-            });
+            const loadScoreboard = async () => {
+                try {
+                    const res = await fetch('/api/scoreboard');
+                    const data = await res.json();
+                    setScoreboard(data);
+                    setScreen('scoreboard');
+                } catch (error) {
+                    alert('Failed to load scoreboard');
+                }
+            };
 
-            // Detect window blur
-            window.addEventListener('blur', () => {
-                reportMalpractice('You switched to another window!');
-            });
-        }
+            const formatTime = (seconds) => {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            };
 
-        // Report malpractice
-        async function reportMalpractice(message) {
-            malpracticeCount++;
-            
-            await fetch('/api/malpractice', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
+            const getAnsweredCount = () => {
+                return Object.keys(answers).length;
+            };
 
-            document.getElementById('malpracticeMessage').textContent = 
-                `${message}\n\nWarning ${malpracticeCount}/3\n\nFurther violations will be recorded.`;
-            document.getElementById('malpracticeWarning').classList.remove('hidden');
+            // Login Screen
+            if (screen === 'login') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
+                            <div className="text-center mb-8">
+                                <div className="bg-blue-600 text-white text-3xl font-bold py-3 px-6 rounded-lg inline-block mb-4">
+                                    Yleon
+                                </div>
+                                <p className="text-gray-600 mt-2">Secure Assessment Platform</p>
+                            </div>
 
-            const warningDisplay = document.getElementById('warningDisplay');
-            warningDisplay.textContent = `⚠️ Malpractice Count: ${malpracticeCount}`;
-            warningDisplay.style.display = 'block';
-        }
+                            <div className={`p-4 rounded-lg mb-6 ${examStatus.isActive ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                                <p className={`text-center font-semibold ${examStatus.isActive ? 'text-green-700' : 'text-red-700'}`}>
+                                    {examStatus.isActive
+                                        ? `✓ Exam Active (Duration: ${examStatus.duration} minutes)`
+                                        : '✗ No Active Exam Session'
+                                    }
+                                </p>
+                            </div>
 
-        function closeMalpracticeWarning() {
-            document.getElementById('malpracticeWarning').classList.add('hidden');
-        }
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Candidate Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                        placeholder="Enter your full name"
+                                        value={studentName}
+                                        onChange={(e) => setStudentName(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && examStatus.isActive && register()}
+                                    />
+                                </div>
 
-        // Display question
-        function displayQuestion() {
-            if (questions.length === 0) return;
+                                <button
+                                    onClick={register}
+                                    disabled={!examStatus.isActive}
+                                    className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${examStatus.isActive
+                                            ? 'bg-blue-600 hover:bg-blue-700'
+                                            : 'bg-gray-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    {examStatus.isActive ? 'Start Examination →' : 'Exam Not Available'}
+                                </button>
+                            </div>
 
-            const question = questions[currentQuestionIndex];
-            const container = document.getElementById('questionContainer');
-            
-            container.innerHTML = `
-                <div class="question-card">
-                    <div class="question-text">
-                        Question ${currentQuestionIndex + 1} of ${questions.length}: ${question.question}
+                            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p className="text-xs text-yellow-800">
+                                    <strong>Important:</strong> The exam will start in fullscreen mode.
+                                    Do not exit fullscreen or switch tabs during the examination.
+                                </p>
+                            </div>
+                            <div className="text-blue-900  text-center mt-2">
+                                © 2025 JXS Yleon. All rights reserved.
+                            </div>
+                        </div>
+
                     </div>
-                    <label class="option">
-                        <input type="radio" name="answer" value="a" ${answers[question.id] === 'a' ? 'checked' : ''}>
-                        A. ${question.option_a}
-                    </label>
-                    <label class="option">
-                        <input type="radio" name="answer" value="b" ${answers[question.id] === 'b' ? 'checked' : ''}>
-                        B. ${question.option_b}
-                    </label>
-                    <label class="option">
-                        <input type="radio" name="answer" value="c" ${answers[question.id] === 'c' ? 'checked' : ''}>
-                        C. ${question.option_c}
-                    </label>
-                    <label class="option">
-                        <input type="radio" name="answer" value="d" ${answers[question.id] === 'd' ? 'checked' : ''}>
-                        D. ${question.option_d}
-                    </label>
-                </div>
-            `;
-
-            // Save answer on selection
-            document.querySelectorAll('input[name="answer"]').forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    answers[question.id] = e.target.value;
-                    submitAnswer(question.id, e.target.value);
-                });
-            });
-
-            updateProgress();
-            updateNavButtons();
-        }
-
-        // Submit answer
-        async function submitAnswer(questionId, answer) {
-            await fetch('/api/submit-answer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ questionId, answer })
-            });
-        }
-
-        // Navigation
-        function previousQuestion() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                displayQuestion();
-            }
-        }
-
-        function nextQuestion() {
-            if (currentQuestionIndex < questions.length - 1) {
-                currentQuestionIndex++;
-                displayQuestion();
-            }
-        }
-
-        function updateNavButtons() {
-            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
-            document.getElementById('nextBtn').classList.toggle('hidden', currentQuestionIndex === questions.length - 1);
-            document.getElementById('submitBtn').classList.toggle('hidden', currentQuestionIndex !== questions.length - 1);
-        }
-
-        function updateProgress() {
-            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-        }
-
-        // Submit exam
-        async function submitExam() {
-            if (!confirm('Are you sure you want to submit the exam? You cannot change answers after submission.')) {
-                return;
+                );
             }
 
-            try {
-                const res = await fetch('/api/complete-exam', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+            // Exam Screen
+            if (screen === 'exam') {
+                const currentQuestion = questions[currentQuestionIndex];
+                const progress = questions.length > 0 ? (getAnsweredCount() / questions.length) * 100 : 0;
 
-                const data = await res.json();
-                
-                document.getElementById('examScreen').classList.add('hidden');
-                document.getElementById('resultsScreen').classList.remove('hidden');
-                document.getElementById('scoreDisplay').textContent = 
-                    `You scored ${data.score} out of ${data.total}`;
+                return (
+                    <div className="exam-container min-h-screen bg-gray-100">
+                        {/* Header */}
+                        <div className="bg-blue-900 text-white px-6 py-3 flex justify-between items-center">
+                            <div className="flex items-center space-x-4">
+                                <div className="bg-white text-blue-900 px-4 py-1 rounded font-bold">Yleon</div>
+                                <span className="font-semibold">Online Examination</span>
+                            </div>
+                            <div className="flex items-center space-x-6">
+                                <div className="text-sm">
+                                    <span className="opacity-75">Candidate:</span> <span className="font-semibold">{studentName}</span>
+                                </div>
+                                <div className={`px-4 py-2 rounded font-mono text-lg font-bold ${timeRemaining <= 300 ? 'bg-red-600 animate-pulse' : 'bg-blue-800'
+                                    }`}>
+                                    ⏱ {formatTime(timeRemaining)}
+                                </div>
+                            </div>
+                        </div>
 
-                if (document.fullscreenElement) {
-                    document.exitFullscreen();
-                }
-            } catch (error) {
-                alert('Failed to submit exam. Please try again.');
+                        {/* Progress Bar */}
+                        <div className="bg-white border-b">
+                            <div className="px-6 py-3 flex justify-between items-center">
+                                <div className="text-sm text-gray-600">
+                                    <span className="font-semibold text-gray-800">{getAnsweredCount()}</span> of {questions.length} answered
+                                </div>
+                                <div className="flex space-x-2">
+                                    <button
+                                        onClick={() => setViewMode('single')}
+                                        className={`px-4 py-1 rounded ${viewMode === 'single' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                                    >
+                                        Single View
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('grid')}
+                                        className={`px-4 py-1 rounded ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                                    >
+                                        Grid View
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="h-1 bg-gray-200">
+                                <div className="h-full bg-blue-600 transition-all" style={{ width: `${progress}%` }}></div>
+                            </div>
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="flex h-[calc(100vh-140px)]">
+                            {/* Question Navigation Sidebar */}
+                            <div className="w-64 bg-white border-r overflow-y-auto p-4">
+                                <h3 className="font-semibold text-gray-700 mb-3">Question Palette</h3>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {questions.map((q, index) => (
+                                        <button
+                                            key={q.id}
+                                            onClick={() => setCurrentQuestionIndex(index)}
+                                            className={`w-full aspect-square rounded font-semibold text-sm ${currentQuestionIndex === index
+                                                    ? 'bg-blue-600 text-white'
+                                                    : answers[q.id]
+                                                        ? 'bg-green-500 text-white'
+                                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                }`}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="mt-4 space-y-2 text-xs">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-4 h-4 bg-green-500 rounded"></div>
+                                        <span>Answered</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                                        <span>Not Answered</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                                        <span>Current</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Question Area */}
+                            {viewMode === 'single' && currentQuestion && (
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
+                                        <div className="mb-4">
+                                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-semibold">
+                                                Question {currentQuestionIndex + 1}
+                                            </span>
+                                        </div>
+                                        <h2 className="text-xl font-semibold text-gray-800 mb-6">
+                                            {currentQuestion.question}
+                                        </h2>
+                                        <div className="space-y-3">
+                                            {['a', 'b', 'c', 'd'].map((option) => (
+                                                <label
+                                                    key={option}
+                                                    className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${answers[currentQuestion.id] === option
+                                                            ? 'border-blue-600 bg-blue-50'
+                                                            : 'border-gray-300 hover:border-blue-400'
+                                                        }`}
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name={`question-${currentQuestion.id}`}
+                                                        value={option}
+                                                        checked={answers[currentQuestion.id] === option}
+                                                        onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                                                        className="mt-1 mr-3"
+                                                    />
+                                                    <span className="flex-1">
+                                                        <strong className="uppercase mr-2">{option}.</strong>
+                                                        {currentQuestion[`option_${option}`]}
+                                                    </span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        <div className="mt-6 flex justify-between">
+                                            <button
+                                                onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                                                disabled={currentQuestionIndex === 0}
+                                                className="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                ← Previous
+                                            </button>
+                                            {currentQuestionIndex < questions.length - 1 ? (
+                                                <button
+                                                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                                                    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                >
+                                                    Next →
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => submitExam(false)}
+                                                    className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold"
+                                                >
+                                                    Submit Exam
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {viewMode === 'grid' && (
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    <div className="max-w-6xl mx-auto space-y-6">
+                                        {questions.map((q, index) => (
+                                            <div key={q.id} className="bg-white rounded-lg shadow p-6">
+                                                <div className="mb-4">
+                                                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-semibold">
+                                                        Question {index + 1}
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                                    {q.question}
+                                                </h3>
+                                                <div className="space-y-2">
+                                                    {['a', 'b', 'c', 'd'].map((option) => (
+                                                        <label
+                                                            key={option}
+                                                            className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all ${answers[q.id] === option
+                                                                    ? 'border-blue-600 bg-blue-50'
+                                                                    : 'border-gray-300 hover:border-blue-400'
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="radio"
+                                                                name={`question-${q.id}`}
+                                                                value={option}
+                                                                checked={answers[q.id] === option}
+                                                                onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                                                                className="mt-1 mr-3"
+                                                            />
+                                                            <span className="flex-1">
+                                                                <strong className="uppercase mr-2">{option}.</strong>
+                                                                {q[`option_${option}`]}
+                                                            </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="bg-white rounded-lg shadow p-6">
+                                            <button
+                                                onClick={() => submitExam(false)}
+                                                className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold text-lg"
+                                            >
+                                                Submit Examination
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
             }
+
+            // Results Screen
+            if (screen === 'results') {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center">
+                            <div className="mb-6">
+                                <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h1 className="text-3xl font-bold text-gray-800 mb-2">Exam Completed!</h1>
+                                {isAutoSubmit && (
+                                    <p className="text-yellow-600 font-semibold">⏰ Auto-submitted (Time Expired)</p>
+                                )}
+                            </div>
+
+                            <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                                <p className="text-gray-600 mb-2">Your Score</p>
+                                <p className="text-5xl font-bold text-blue-600">
+                                    {score?.score}<span className="text-2xl text-gray-400">/{score?.total}</span>
+                                </p>
+                                <p className="text-gray-600 mt-2">
+                                    {((score?.score / score?.total) * 100).toFixed(1)}%
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={loadScoreboard}
+                                className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold mb-3"
+                            >
+                                View Scoreboard
+                            </button>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="w-full py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold"
+                            >
+                                Return to Home
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Scoreboard Screen
+            if (screen === 'scoreboard') {
+                return (
+                    <div className="min-h-screen bg-gray-100 p-6">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                                <h1 className="text-3xl font-bold text-gray-800 mb-2">🏆 Scoreboard</h1>
+                                <p className="text-gray-600">Top performers in this examination</p>
+                            </div>
+
+                            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                <table className="w-full">
+                                    <thead className="bg-blue-900 text-white">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left">Rank</th>
+                                            <th className="px-6 py-4 text-left">Name</th>
+                                            <th className="px-6 py-4 text-center">Score</th>
+                                            <th className="px-6 py-4 text-center">Percentage</th>
+                                            <th className="px-6 py-4 text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {scoreboard.map((item, index) => (
+                                            <tr key={index} className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : ''}`}>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-block px-3 py-1 rounded-full font-bold ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                                                            index === 1 ? 'bg-gray-300 text-gray-800' :
+                                                                index === 2 ? 'bg-orange-400 text-orange-900' :
+                                                                    'bg-gray-200 text-gray-700'
+                                                        }`}>
+                                                        #{index + 1}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 font-semibold">{item.name}</td>
+                                                <td className="px-6 py-4 text-center font-bold">{item.score}/{item.total_questions}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    {((item.score / item.total_questions) * 100).toFixed(1)}%
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.auto_submitted ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                                                        }`}>
+                                                        {item.auto_submitted ? '⏰ Auto' : '✓ Manual'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="mt-6 text-center">
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                                >
+                                    Return to Home
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
         }
 
-        // View scoreboard
-        async function viewScoreboard() {
-            try {
-                const res = await fetch('/api/scoreboard');
-                const scores = await res.json();
-
-                const tbody = document.getElementById('scoreboardBody');
-                tbody.innerHTML = scores.map((score, index) => `
-                    <tr>
-                        <td><span class="rank-badge ${index < 3 ? 'rank-' + (index + 1) : ''}">#${index + 1}</span></td>
-                        <td>${score.name}</td>
-                        <td>${score.score}/${score.total_questions}</td>
-                        <td>${score.malpractice_count}</td>
-                    </tr>
-                `).join('');
-
-                document.getElementById('resultsScreen').classList.add('hidden');
-                document.getElementById('scoreboardScreen').classList.remove('hidden');
-            } catch (error) {
-                alert('Failed to load scoreboard');
-            }
-        }
+        ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
+
 </html>

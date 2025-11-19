@@ -1,590 +1,640 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Admin Panel</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: #1e3c72;
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            margin-bottom: 10px;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .section {
-            margin-bottom: 40px;
-        }
-
-        .section-title {
-            font-size: 24px;
-            color: #1e3c72;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #1e3c72;
-        }
-
-        .exam-controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .exam-controls button {
-            flex: 1;
-            padding: 15px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-start {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-start:hover {
-            background: #218838;
-        }
-
-        .btn-end {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-end:hover {
-            background: #c82333;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        input[type="text"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: #1e3c72;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            background: #1e3c72;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .btn:hover {
-            background: #152d5c;
-        }
-
-        .questions-list {
-            margin-top: 20px;
-        }
-
-        .question-item {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 2px solid #dee2e6;
-        }
-
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 15px;
-        }
-
-        .question-text {
-            font-weight: 600;
-            color: #333;
-            flex: 1;
-        }
-
-        .delete-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .delete-btn:hover {
-            background: #c82333;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .option-item {
-            padding: 10px;
-            background: white;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .correct-answer {
-            background: #d4edda;
-            font-weight: 600;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-            }
-
-            .exam-controls {
-                flex-direction: column;
-            }
-
-            .options-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .scoreboard {
-            margin-top: 20px;
-        }
-
-        .scoreboard table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        .scoreboard th,
-        .scoreboard td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .scoreboard th {
-            background: #1e3c72;
-            color: white;
-            font-weight: 600;
-        }
-
-        .scoreboard tr:hover {
-            background: #f5f5f5;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-        }
-    </style>
+    <title>Yleon</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎓 Quiz Admin Panel</h1>
-            <p>Manage exams and questions</p>
-        </div>
+    <div id="root"></div>
 
-        <div class="content">
-            <!-- Exam Control Section -->
-            <div class="section">
-                <h2 class="section-title">Exam Control</h2>
-                <div style="margin-bottom: 20px;">
-                    <strong>Current Status: </strong>
-                    <span class="status-badge" id="examStatus">Checking...</span>
-                </div>
-                <div class="exam-controls">
-                    <button class="btn-start" onclick="startExam()">🟢 Start Exam</button>
-                    <button class="btn-end" onclick="endExam()">🔴 End Exam</button>
-                </div>
-                <div id="alertBox"></div>
-            </div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
 
-            <!-- Add Question Section -->
-            <div class="section">
-                <h2 class="section-title">Add New Question</h2>
-                <form onsubmit="addQuestion(event)">
-                    <div class="form-group">
-                        <label for="question">Question *</label>
-                        <textarea id="question" required placeholder="Enter your question here..."></textarea>
-                    </div>
+        function AdminApp() {
+            const [activeTab, setActiveTab] = useState('control');
+            const [examStatus, setExamStatus] = useState({ isActive: false, duration: 60 });
+            const [duration, setDuration] = useState(60);
+            const [questions, setQuestions] = useState([]);
+            const [scoreboard, setScoreboard] = useState([]);
+            const [stats, setStats] = useState({});
+            const [newQuestion, setNewQuestion] = useState({
+                question: '',
+                option_a: '',
+                option_b: '',
+                option_c: '',
+                option_d: '',
+                correct_answer: ''
+            });
 
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label for="optionA">Option A *</label>
-                            <input type="text" id="optionA" required placeholder="Option A">
-                        </div>
-                        <div class="form-group">
-                            <label for="optionB">Option B *</label>
-                            <input type="text" id="optionB" required placeholder="Option B">
-                        </div>
-                        <div class="form-group">
-                            <label for="optionC">Option C *</label>
-                            <input type="text" id="optionC" required placeholder="Option C">
-                        </div>
-                        <div class="form-group">
-                            <label for="optionD">Option D *</label>
-                            <input type="text" id="optionD" required placeholder="Option D">
-                        </div>
-                    </div>
+            useEffect(() => {
+                checkExamStatus();
+                loadQuestions();
+                loadStats();
+                const interval = setInterval(checkExamStatus, 5000);
+                return () => clearInterval(interval);
+            }, []);
 
-                    <div class="form-group">
-                        <label for="correctAnswer">Correct Answer *</label>
-                        <select id="correctAnswer" required>
-                            <option value="">Select correct answer</option>
-                            <option value="a">A</option>
-                            <option value="b">B</option>
-                            <option value="c">C</option>
-                            <option value="d">D</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn">➕ Add Question</button>
-                </form>
-            </div>
-
-            <!-- Questions List Section -->
-            <div class="section">
-                <h2 class="section-title">All Questions</h2>
-                <div id="questionsList" class="questions-list">
-                    <div class="loading">Loading questions...</div>
-                </div>
-            </div>
-
-            <!-- Scoreboard Section -->
-            <div class="section">
-                <h2 class="section-title">Live Scoreboard</h2>
-                <button class="btn" onclick="loadScoreboard()" style="margin-bottom: 15px;">🔄 Refresh Scoreboard</button>
-                <div class="scoreboard">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Name</th>
-                                <th>Score</th>
-                                <th>Malpractice</th>
-                                <th>Completed At</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scoreboardBody">
-                            <tr>
-                                <td colspan="5" class="loading">Click refresh to load scoreboard</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Check exam status
-        async function checkExamStatus() {
-            try {
-                const res = await fetch('/api/exam-status');
-                const data = await res.json();
-                const statusEl = document.getElementById('examStatus');
-                
-                if (data.isActive) {
-                    statusEl.textContent = 'Active';
-                    statusEl.className = 'status-badge status-active';
-                } else {
-                    statusEl.textContent = 'Inactive';
-                    statusEl.className = 'status-badge status-inactive';
+            const checkExamStatus = async () => {
+                try {
+                    const res = await fetch('/api/exam-status');
+                    const data = await res.json();
+                    setExamStatus(data);
+                    setDuration(data.duration);
+                } catch (error) {
+                    console.error('Failed to check exam status:', error);
                 }
-            } catch (error) {
-                console.error('Failed to check status:', error);
-            }
-        }
-
-        // Show alert
-        function showAlert(message, type = 'success') {
-            const alertBox = document.getElementById('alertBox');
-            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-            setTimeout(() => {
-                alertBox.innerHTML = '';
-            }, 5000);
-        }
-
-        // Start exam
-        async function startExam() {
-            if (!confirm('Start the exam? Students will be able to take the exam.')) return;
-
-            try {
-                const res = await fetch('/api/admin/start-exam', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    showAlert('✅ Exam started successfully!', 'success');
-                    checkExamStatus();
-                } else {
-                    showAlert('❌ Failed to start exam', 'error');
-                }
-            } catch (error) {
-                showAlert('❌ Error starting exam', 'error');
-            }
-        }
-
-        // End exam
-        async function endExam() {
-            if (!confirm('End the exam? No more students can take the exam.')) return;
-
-            try {
-                const res = await fetch('/api/admin/end-exam', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    showAlert('✅ Exam ended successfully!', 'success');
-                    checkExamStatus();
-                } else {
-                    showAlert('❌ Failed to end exam', 'error');
-                }
-            } catch (error) {
-                showAlert('❌ Error ending exam', 'error');
-            }
-        }
-
-        // Add question
-        async function addQuestion(e) {
-            e.preventDefault();
-
-            const question = {
-                question: document.getElementById('question').value,
-                option_a: document.getElementById('optionA').value,
-                option_b: document.getElementById('optionB').value,
-                option_c: document.getElementById('optionC').value,
-                option_d: document.getElementById('optionD').value,
-                correct_answer: document.getElementById('correctAnswer').value
             };
 
-            try {
-                const res = await fetch('/api/admin/questions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(question)
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    showAlert('✅ Question added successfully!', 'success');
-                    e.target.reset();
-                    loadQuestions();
-                } else {
-                    showAlert('❌ Failed to add question', 'error');
-                }
-            } catch (error) {
-                showAlert('❌ Error adding question', 'error');
-            }
-        }
-
-        // Load questions
-        async function loadQuestions() {
-            try {
-                const res = await fetch('/api/admin/questions');
-                const questions = await res.json();
-
-                const container = document.getElementById('questionsList');
-                
-                if (questions.length === 0) {
-                    container.innerHTML = '<div class="loading">No questions added yet.</div>';
+            const setExamDuration = async () => {
+                if (duration < 1 || duration > 300) {
+                    alert('Duration must be between 1 and 300 minutes');
                     return;
                 }
 
-                container.innerHTML = questions.map((q, index) => `
-                    <div class="question-item">
-                        <div class="question-header">
-                            <div class="question-text">${index + 1}. ${q.question}</div>
-                            <button class="delete-btn" onclick="deleteQuestion(${q.id})">🗑️ Delete</button>
+                try {
+                    const res = await fetch('/api/admin/set-duration', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ duration })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert(`✓ Duration set to ${duration} minutes`);
+                        checkExamStatus();
+                    }
+                } catch (error) {
+                    alert('Failed to set duration');
+                }
+            };
+
+            const startExam = async () => {
+                if (!window.confirm(`Start exam with ${duration} minutes duration?`)) return;
+
+                try {
+                    const res = await fetch('/api/admin/start-exam', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('✓ Exam started successfully!');
+                        checkExamStatus();
+                    }
+                } catch (error) {
+                    alert('Failed to start exam');
+                }
+            };
+
+            const endExam = async () => {
+                if (!window.confirm('End the exam? All active sessions will be terminated.')) return;
+
+                try {
+                    const res = await fetch('/api/admin/end-exam', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('✓ Exam ended successfully!');
+                        checkExamStatus();
+                    }
+                } catch (error) {
+                    alert('Failed to end exam');
+                }
+            };
+
+            const loadQuestions = async () => {
+                try {
+                    const res = await fetch('/api/admin/questions');
+                    const data = await res.json();
+                    setQuestions(data);
+                } catch (error) {
+                    console.error('Failed to load questions:', error);
+                }
+            };
+
+            const addQuestion = async (e) => {
+                e.preventDefault();
+
+                if (!newQuestion.correct_answer) {
+                    alert('Please select the correct answer');
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/admin/questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newQuestion)
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('✓ Question added successfully!');
+                        setNewQuestion({
+                            question: '',
+                            option_a: '',
+                            option_b: '',
+                            option_c: '',
+                            option_d: '',
+                            correct_answer: ''
+                        });
+                        loadQuestions();
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Failed to add question');
+                }
+            };
+
+            const deleteQuestion = async (id) => {
+                if (!window.confirm('Delete this question?')) return;
+
+                try {
+                    const res = await fetch(`/api/admin/questions/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('✓ Question deleted');
+                        loadQuestions();
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Failed to delete question');
+                }
+            };
+
+            const loadScoreboard = async () => {
+                try {
+                    const res = await fetch('/api/scoreboard');
+                    const data = await res.json();
+                    setScoreboard(data);
+                } catch (error) {
+                    console.error('Failed to load scoreboard:', error);
+                }
+            };
+
+            const loadStats = async () => {
+                try {
+                    const res = await fetch('/api/admin/stats');
+                    const data = await res.json();
+                    setStats(data);
+                } catch (error) {
+                    console.error('Failed to load stats:', error);
+                }
+            };
+
+            const resetAll = async () => {
+                if (!window.confirm('Reset all answers and scoreboard? Questions will be kept. This cannot be undone!')) return;
+
+                try {
+                    const res = await fetch('/api/admin/reset-all', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('✓ Database reset successfully!');
+                        loadScoreboard();
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Failed to reset database');
+                }
+            };
+
+            const resetQuestions = async () => {
+                if (!window.confirm('Reset ALL data including questions? This will delete EVERYTHING! This cannot be undone!')) return;
+
+                try {
+                    const res = await fetch('/api/admin/reset-questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        alert('✓ All data deleted successfully!');
+                        loadQuestions();
+                        loadScoreboard();
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Failed to reset questions');
+                }
+            };
+
+            useEffect(() => {
+                if (activeTab === 'scoreboard') {
+                    loadScoreboard();
+                }
+            }, [activeTab]);
+
+            return (
+                <div className="min-h-screen bg-gray-100">
+                    {/* Header */}
+                    <div className="bg-blue-900 text-white px-6 py-4">
+                        <div className="max-w-7xl mx-auto">
+                            <h1 className="text-2xl font-bold">Yleon</h1>
+                            <p className="text-blue-200">Exam Management System</p>
                         </div>
-                        <div class="options-grid">
-                            <div class="option-item ${q.correct_answer.toLowerCase() === 'a' ? 'correct-answer' : ''}">
-                                A. ${q.option_a}
-                            </div>
-                            <div class="option-item ${q.correct_answer.toLowerCase() === 'b' ? 'correct-answer' : ''}">
-                                B. ${q.option_b}
-                            </div>
-                            <div class="option-item ${q.correct_answer.toLowerCase() === 'c' ? 'correct-answer' : ''}">
-                                C. ${q.option_c}
-                            </div>
-                            <div class="option-item ${q.correct_answer.toLowerCase() === 'd' ? 'correct-answer' : ''}">
-                                D. ${q.option_d}
+                    </div>
+
+                    {/* Navigation Tabs */}
+                    <div className="bg-white shadow">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="flex space-x-1">
+                                {['control', 'questions', 'scoreboard', 'settings'].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`px-6 py-3 font-semibold capitalize ${activeTab === tab
+                                                ? 'bg-blue-600 text-white'
+                                                : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
+                                    >
+                                        {tab}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
-                `).join('');
-            } catch (error) {
-                document.getElementById('questionsList').innerHTML = 
-                    '<div class="loading">Failed to load questions</div>';
-            }
+
+                    {/* Content Area */}
+                    <div className="max-w-7xl mx-auto p-6">
+                        {/* Control Tab */}
+                        {activeTab === 'control' && (
+                            <div className="space-y-6">
+                                {/* Status Card */}
+                                <div className="bg-white rounded-lg shadow p-6">
+                                    <h2 className="text-xl font-bold mb-4">Exam Status</h2>
+                                    <div className="flex items-center space-x-4">
+                                        <span className={`px-4 py-2 rounded-full font-semibold ${examStatus.isActive
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-red-100 text-red-800'
+                                            }`}>
+                                            {examStatus.isActive ? '🟢 Active' : '🔴 Inactive'}
+                                        </span>
+                                        <span className="text-gray-600">
+                                            Duration: <strong>{examStatus.duration} minutes</strong>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Statistics */}
+                                <div className="grid grid-cols-3 gap-6">
+                                    <div className="bg-white rounded-lg shadow p-6">
+                                        <div className="text-3xl font-bold text-blue-600">{stats.totalQuestions || 0}</div>
+                                        <div className="text-gray-600 mt-1">Total Questions</div>
+                                    </div>
+                                    <div className="bg-white rounded-lg shadow p-6">
+                                        <div className="text-3xl font-bold text-green-600">{stats.totalParticipants || 0}</div>
+                                        <div className="text-gray-600 mt-1">Participants</div>
+                                    </div>
+                                    <div className="bg-white rounded-lg shadow p-6">
+                                        <div className="text-3xl font-bold text-purple-600">{stats.averageScore || 0}</div>
+                                        <div className="text-gray-600 mt-1">Average Score</div>
+                                    </div>
+                                </div>
+
+                                {/* Exam Controls */}
+                                <div className="bg-white rounded-lg shadow p-6">
+                                    <h2 className="text-xl font-bold mb-4">Exam Controls</h2>
+
+                                    <div className="mb-6">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Set Exam Duration (minutes)
+                                        </label>
+                                        <div className="flex space-x-3">
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="300"
+                                                value={duration}
+                                                onChange={(e) => setDuration(parseInt(e.target.value))}
+                                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            />
+                                            <button
+                                                onClick={setExamDuration}
+                                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                                            >
+                                                Set Duration
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-6 gap-4">
+                                        <button
+                                            onClick={startExam}
+                                            disabled={examStatus.isActive}
+                                            className={`py-3 rounded-lg font-semibold ${examStatus.isActive
+                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-green-600 text-white hover:bg-green-700'
+                                                }`}
+                                        >
+                                            🟢 Start Exam
+                                        </button>
+                                        <button
+                                            onClick={endExam}
+                                            disabled={!examStatus.isActive}
+                                            className={`py-3 rounded-lg font-semibold ${!examStatus.isActive
+                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-red-600 text-white hover:bg-red-700'
+                                                }`}
+                                        >
+                                            🔴 End Exam
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Questions Tab */}
+                        {activeTab === 'questions' && (
+                            <div className="space-y-6">
+                                {/* Add Question Form */}
+                                <div className="bg-white rounded-lg shadow p-6">
+                                    <h2 className="text-xl font-bold mb-4">Add New Question</h2>
+                                    <form onSubmit={addQuestion} className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Question
+                                            </label>
+                                            <textarea
+                                                value={newQuestion.question}
+                                                onChange={(e) => setNewQuestion({ ...newQuestion, question: e.target.value })}
+                                                required
+                                                rows="3"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                placeholder="Enter your question here..."
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Option A</label>
+                                                <input
+                                                    type="text"
+                                                    value={newQuestion.option_a}
+                                                    onChange={(e) => setNewQuestion({ ...newQuestion, option_a: e.target.value })}
+                                                    required
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Option B</label>
+                                                <input
+                                                    type="text"
+                                                    value={newQuestion.option_b}
+                                                    onChange={(e) => setNewQuestion({ ...newQuestion, option_b: e.target.value })}
+                                                    required
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Option C</label>
+                                                <input
+                                                    type="text"
+                                                    value={newQuestion.option_c}
+                                                    onChange={(e) => setNewQuestion({ ...newQuestion, option_c: e.target.value })}
+                                                    required
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Option D</label>
+                                                <input
+                                                    type="text"
+                                                    value={newQuestion.option_d}
+                                                    onChange={(e) => setNewQuestion({ ...newQuestion, option_d: e.target.value })}
+                                                    required
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Correct Answer
+                                            </label>
+                                            <select
+                                                value={newQuestion.correct_answer}
+                                                onChange={(e) => setNewQuestion({ ...newQuestion, correct_answer: e.target.value })}
+                                                required
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                            >
+                                                <option value="">Select correct answer</option>
+                                                <option value="a">A</option>
+                                                <option value="b">B</option>
+                                                <option value="c">C</option>
+                                                <option value="d">D</option>
+                                            </select>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                                        >
+                                            ➕ Add Question
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {/* Questions List */}
+                                <div className="bg-white rounded-lg shadow p-6">
+                                    <h2 className="text-xl font-bold mb-4">All Questions ({questions.length})</h2>
+                                    {questions.length === 0 ? (
+                                        <p className="text-gray-500 text-center py-8">No questions added yet</p>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {questions.map((q, index) => (
+                                                <div key={q.id} className="border border-gray-200 rounded-lg p-4">
+                                                    <div className="flex justify-between items-start mb-3">
+                                                        <div className="flex-1">
+                                                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">
+                                                                Q{index + 1}
+                                                            </span>
+                                                            <p className="font-semibold text-gray-800 mt-2">{q.question}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => deleteQuestion(q.id)}
+                                                            className="ml-4 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                                        {['a', 'b', 'c', 'd'].map((opt) => (
+                                                            <div
+                                                                key={opt}
+                                                                className={`p-2 rounded ${q.correct_answer === opt
+                                                                        ? 'bg-green-100 border-2 border-green-500 font-semibold'
+                                                                        : 'bg-gray-50'
+                                                                    }`}
+                                                            >
+                                                                <span className="font-semibold uppercase">{opt}.</span> {q[`option_${opt}`]}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Scoreboard Tab */}
+                        {activeTab === 'scoreboard' && (
+                            <div className="space-y-6">
+                                <div className="bg-white rounded-lg shadow p-6">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h2 className="text-xl font-bold">Scoreboard</h2>
+                                        <button
+                                            onClick={loadScoreboard}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                                        >
+                                            🔄 Refresh
+                                        </button>
+                                    </div>
+
+                                    {scoreboard.length === 0 ? (
+                                        <p className="text-gray-500 text-center py-8">No results yet</p>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead className="bg-gray-50">
+                                                    <tr>
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Rank</th>
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Score</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Percentage</th>
+                                                        <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Status</th>
+                                                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Completed</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-200">
+                                                    {scoreboard.map((item, index) => (
+                                                        <tr key={index} className="hover:bg-gray-50">
+                                                            <td className="px-4 py-3">
+                                                                <span className={`inline-block px-3 py-1 rounded-full font-bold text-sm ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                                                                        index === 1 ? 'bg-gray-300 text-gray-800' :
+                                                                            index === 2 ? 'bg-orange-400 text-orange-900' :
+                                                                                'bg-gray-200 text-gray-700'
+                                                                    }`}>
+                                                                    #{index + 1}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 font-semibold">{item.name}</td>
+                                                            <td className="px-4 py-3 text-center font-bold">{item.score}/{item.total_questions}</td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                {((item.score / item.total_questions) * 100).toFixed(1)}%
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.auto_submitted ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                                                                    }`}>
+                                                                    {item.auto_submitted ? '⏰ Auto' : '✓ Manual'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-gray-600">
+                                                                {new Date(item.completed_at).toLocaleString()}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Settings Tab */}
+                        {activeTab === 'settings' && (
+                            <div className="space-y-6">
+                                <div className="bg-white rounded-lg shadow p-6">
+                                    <h2 className="text-xl font-bold mb-4 text-red-600">⚠️ Danger Zone</h2>
+                                    <p className="text-gray-600 mb-6">These actions cannot be undone. Use with caution.</p>
+
+                                    <div className="space-y-4">
+                                        <div className="border-2 border-yellow-300 rounded-lg p-4 bg-yellow-50">
+                                            <h3 className="font-bold text-gray-800 mb-2">Reset Answers & Scoreboard</h3>
+                                            <p className="text-sm text-gray-600 mb-3">
+                                                Deletes all participant answers and scoreboard data. Questions will be kept intact.
+                                            </p>
+                                            <button
+                                                onClick={resetAll}
+                                                className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-semibold"
+                                            >
+                                                Reset Answers & Scoreboard
+                                            </button>
+                                        </div>
+
+                                        <div className="border-2 border-red-300 rounded-lg p-4 bg-red-50">
+                                            <h3 className="font-bold text-gray-800 mb-2">Reset Everything (Including Questions)</h3>
+                                            <p className="text-sm text-gray-600 mb-3">
+                                                Deletes ALL data including questions, answers, and scoreboard. Complete database reset.
+                                            </p>
+                                            <button
+                                                onClick={resetQuestions}
+                                                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold"
+                                            >
+                                                Reset All Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-lg shadow p-6">
+                                    <h2 className="text-xl font-bold mb-4">System Information</h2>
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between py-2 border-b">
+                                            <span className="text-gray-600">Total Questions:</span>
+                                            <span className="font-semibold">{stats.totalQuestions || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2 border-b">
+                                            <span className="text-gray-600">Total Participants:</span>
+                                            <span className="font-semibold">{stats.totalParticipants || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2 border-b">
+                                            <span className="text-gray-600">Average Score:</span>
+                                            <span className="font-semibold">{stats.averageScore || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between py-2">
+                                            <span className="text-gray-600">Exam Status:</span>
+                                            <span className={`font-semibold ${examStatus.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                                {examStatus.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+
+<footer className="bg-blue-900 text-white text-center py-4 mt-12">
+                        © 2025 Yleon. All rights reserved.
+                    </footer>
+                </div>
+            );
         }
 
-        // Delete question
-        async function deleteQuestion(id) {
-            if (!confirm('Delete this question?')) return;
-
-            try {
-                const res = await fetch(`/api/admin/questions/${id}`, {
-                    method: 'DELETE'
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    showAlert('✅ Question deleted successfully!', 'success');
-                    loadQuestions();
-                } else {
-                    showAlert('❌ Failed to delete question', 'error');
-                }
-            } catch (error) {
-                showAlert('❌ Error deleting question', 'error');
-            }
-        }
-
-        // Load scoreboard
-        async function loadScoreboard() {
-            try {
-                const res = await fetch('/api/scoreboard');
-                const scores = await res.json();
-
-                const tbody = document.getElementById('scoreboardBody');
-                
-                if (scores.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="loading">No results yet</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = scores.map((score, index) => `
-                    <tr>
-                        <td><strong>#${index + 1}</strong></td>
-                        <td>${score.name}</td>
-                        <td><strong>${score.score}</strong>/${score.total_questions}</td>
-                        <td>${score.malpractice_count > 0 ? '⚠️ ' + score.malpractice_count : '✅ 0'}</td>
-                        <td>${new Date(score.completed_at).toLocaleString()}</td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                document.getElementById('scoreboardBody').innerHTML = 
-                    '<tr><td colspan="5" class="loading">Failed to load scoreboard</td></tr>';
-            }
-        }
-
-        // Initialize
-        checkExamStatus();
-        loadQuestions();
-        setInterval(checkExamStatus, 5000);
+        ReactDOM.render(<AdminApp />, document.getElementById('root'));
     </script>
 </body>
+
 </html>
