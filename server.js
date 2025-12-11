@@ -433,6 +433,31 @@ app.get('/api/admin/stats', async (req, res) => {
 app.listen(PORT, '0.0.0.0', async () => {
   await initDatabase();
   const localIP = getLocalIP();
+  console.log(`                                                                                    
+                                                                                    
+YYYYYYY       YYYYYYYlllllll                                                        
+Y:::::Y       Y:::::Yl:::::l                                                        
+Y:::::Y       Y:::::Yl:::::l                                                        
+Y::::::Y     Y::::::Yl:::::l                                                        
+YYY:::::Y   Y:::::YYY l::::l     eeeeeeeeeeee       ooooooooooo   nnnn  nnnnnnnn    
+   Y:::::Y Y:::::Y    l::::l   ee::::::::::::ee   oo:::::::::::oo n:::nn::::::::nn  
+    Y:::::Y:::::Y     l::::l  e::::::eeeee:::::eeo:::::::::::::::on::::::::::::::nn 
+     Y:::::::::Y      l::::l e::::::e     e:::::eo:::::ooooo:::::onn:::::::::::::::n
+      Y:::::::Y       l::::l e:::::::eeeee::::::eo::::o     o::::o  n:::::nnnn:::::n
+       Y:::::Y        l::::l e:::::::::::::::::e o::::o     o::::o  n::::n    n::::n
+       Y:::::Y        l::::l e::::::eeeeeeeeeee  o::::o     o::::o  n::::n    n::::n
+       Y:::::Y        l::::l e:::::::e           o::::o     o::::o  n::::n    n::::n
+       Y:::::Y       l::::::le::::::::e          o:::::ooooo:::::o  n::::n    n::::n
+    YYYY:::::YYYY    l::::::l e::::::::eeeeeeee  o:::::::::::::::o  n::::n    n::::n
+    Y:::::::::::Y    l::::::l  ee:::::::::::::e   oo:::::::::::oo   n::::n    n::::n
+    YYYYYYYYYYYYY    llllllll    eeeeeeeeeeeeee     ooooooooooo     nnnnnn    nnnnnn
+                                                                                    
+                                                                                    
+                                                                                    
+                                                                                    
+                                                                                    
+                                                                                    
+                                                                                    \n`)
   console.log(`\n=================================`);
   console.log(`Quiz App Server Running`);
   console.log(`=================================`);
