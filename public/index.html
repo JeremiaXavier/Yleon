@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +7,13 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
         }
-
         .exam-container {
             user-select: none;
             -webkit-user-select: none;
@@ -24,7 +22,6 @@
         }
     </style>
 </head>
-
 <body>
     <div id="root"></div>
 
@@ -42,12 +39,15 @@
             const [score, setScore] = useState(null);
             const [scoreboard, setScoreboard] = useState([]);
             const [isAutoSubmit, setIsAutoSubmit] = useState(false);
-            const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'single'
-
+            const [viewMode, setViewMode] = useState('single'); // 'grid' or 'single'
+            
             const examStartTimeRef = useRef(null);
             const timerIntervalRef = useRef(null);
             const isSubmittingRef = useRef(false);
-
+            const securityActiveRef = useRef(false);
+            const [violations, setViolations] = useState(0);
+            const [showWarning, setShowWarning] = useState(false);
+            const [warningMessage, setWarningMessage] = useState('');
             useEffect(() => {
                 checkExamStatus();
                 const interval = setInterval(checkExamStatus, 5000);
@@ -56,10 +56,145 @@
 
             useEffect(() => {
                 if (screen === 'exam') {
+                    console.log('Exam screen mounted, setting up security...');
                     disableKeys();
-                    return () => enableKeys();
+                    setupSecurityMeasures();
+                    return () => {
+                        console.log('Exam screen unmounting, cleaning up...');
+                        enableKeys();
+                        cleanupSecurityMeasures();
+                    };
                 }
             }, [screen]);
+
+            const reportViolation = (type, message) => {
+                setViolations(prevViolations => {
+                    const newCount = prevViolations + 1;
+                    
+                    // Check if this is the 5th violation
+                    if (newCount >= 5) {
+                        setWarningMessage(`${type}\n\n${message}\n\nViolation #${newCount}\n\nMAXIMUM VIOLATIONS REACHED!\nYour exam will be automatically submitted.`);
+                        setShowWarning(true);
+                        
+                        // Log critical violation
+                        console.error(`[CRITICAL VIOLATION ${newCount}] Maximum violations reached. Auto-submitting exam.`);
+                        
+                        // Auto-submit after showing warning
+                        setTimeout(() => {
+                            setShowWarning(false);
+                            securityActiveRef.current = false; // Disable security
+                            isSubmittingRef.current = true;
+                            submitExam(true); // Auto-submit as violation
+                        }, 3000); // Show warning for 3 seconds
+                    } else {
+                        setWarningMessage(`${type}\n\n${message}\n\nViolation #${newCount} of 5\n\nThis incident has been recorded.\n\n${5 - newCount} violations remaining before auto-submission.`);
+                        setShowWarning(true);
+                        
+                        // Log to console for admin monitoring
+                        console.warn(`[SECURITY VIOLATION ${newCount}] ${type}: ${message} at ${new Date().toLocaleTimeString()}`);
+                    }
+                    
+                    return newCount;
+                });
+            };
+
+            const cleanupSecurityMeasures = () => {
+                securityActiveRef.current = false;
+                if (window._securityCleanup) {
+                    window._securityCleanup();
+                }
+            };
+
+            const setupSecurityMeasures = () => {
+                console.log('Setting up security measures...');
+                
+                // Enable security immediately
+                securityActiveRef.current = true;
+
+                // Detect tab/window visibility changes
+                const handleVisibilityChange = () => {
+                    console.log('Visibility changed:', document.hidden, 'Security active:', securityActiveRef.current);
+                    if (securityActiveRef.current && !isSubmittingRef.current && document.hidden) {
+                        reportViolation('Tab/Window Switch Detected', 'You switched tabs or minimized the window!');
+                    }
+                };
+
+                // Detect window blur (switching to another application)
+                const handleWindowBlur = () => {
+                    console.log('Window blur detected, Security active:', securityActiveRef.current);
+                    if (securityActiveRef.current && !isSubmittingRef.current) {
+                        reportViolation('Window Focus Lost', 'You switched to another application!');
+                    }
+                };
+
+                // Detect fullscreen exit
+                const handleFullscreenChange = () => {
+                    const isFullscreen = document.fullscreenElement || 
+                                       document.webkitFullscreenElement || 
+                                       document.mozFullScreenElement || 
+                                       document.msFullscreenElement;
+                    
+                    console.log('Fullscreen changed:', isFullscreen, 'Security active:', securityActiveRef.current);
+                    
+                    if (securityActiveRef.current && !isSubmittingRef.current && !isFullscreen) {
+                        reportViolation('Fullscreen Exit', 'You exited fullscreen mode!');
+                        // Force back to fullscreen
+                        setTimeout(enableFullscreen, 1000);
+                    }
+                };
+
+                // Detect copy attempts
+                const handleCopy = (e) => {
+                    if (securityActiveRef.current && !isSubmittingRef.current) {
+                        e.preventDefault();
+                        reportViolation('Copy Attempt', 'Copying content is not allowed!');
+                    }
+                };
+
+                // Detect paste attempts
+                const handlePaste = (e) => {
+                    if (securityActiveRef.current && !isSubmittingRef.current) {
+                        e.preventDefault();
+                        reportViolation('Paste Attempt', 'Pasting content is not allowed!');
+                    }
+                };
+
+                // Detect cut attempts
+                const handleCut = (e) => {
+                    if (securityActiveRef.current && !isSubmittingRef.current) {
+                        e.preventDefault();
+                        reportViolation('Cut Attempt', 'Cutting content is not allowed!');
+                    }
+                };
+
+                // Add all event listeners
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+                window.addEventListener('blur', handleWindowBlur);
+                document.addEventListener('fullscreenchange', handleFullscreenChange);
+                document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+                document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+                document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+                document.addEventListener('copy', handleCopy);
+                document.addEventListener('paste', handlePaste);
+                document.addEventListener('cut', handleCut);
+
+                console.log('Security measures active');
+
+                // Store cleanup function
+                window._securityCleanup = () => {
+                    console.log('Cleaning up security measures');
+                    securityActiveRef.current = false;
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                    window.removeEventListener('blur', handleWindowBlur);
+                    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+                    document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+                    document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+                    document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+                    document.removeEventListener('copy', handleCopy);
+                    document.removeEventListener('paste', handlePaste);
+                    document.removeEventListener('cut', handleCut);
+                };
+            };
 
             const checkExamStatus = async () => {
                 try {
@@ -91,8 +226,8 @@
             };
 
             const enableKeys = () => {
-                document.removeEventListener('keydown', () => { });
-                document.removeEventListener('contextmenu', () => { });
+                document.removeEventListener('keydown', () => {});
+                document.removeEventListener('contextmenu', () => {});
             };
 
             const register = async () => {
@@ -132,12 +267,18 @@
                 setTimeRemaining(examStatus.duration * 60);
                 enableFullscreen();
                 startTimer();
+                
+                // Disable text selection
+                document.body.style.userSelect = 'none';
+                document.body.style.webkitUserSelect = 'none';
+                document.body.style.msUserSelect = 'none';
+                document.body.style.mozUserSelect = 'none';
             };
 
             const enableFullscreen = () => {
                 const elem = document.documentElement;
                 if (elem.requestFullscreen) {
-                    elem.requestFullscreen().catch(() => { });
+                    elem.requestFullscreen().catch(() => {});
                 }
             };
 
@@ -146,7 +287,7 @@
                     const elapsed = Math.floor((Date.now() - examStartTimeRef.current) / 1000);
                     const remaining = Math.max(0, (examStatus.duration * 60) - elapsed);
                     setTimeRemaining(remaining);
-
+                    
                     if (remaining <= 0) {
                         clearInterval(timerIntervalRef.current);
                         autoSubmitExam();
@@ -156,7 +297,7 @@
 
             const handleAnswerChange = async (questionId, answer) => {
                 setAnswers({ ...answers, [questionId]: answer });
-
+                
                 await fetch('/api/submit-answer', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -173,7 +314,7 @@
 
             const submitExam = async (autoSubmitted = false) => {
                 if (isSubmittingRef.current && !autoSubmitted) return;
-
+                
                 if (!autoSubmitted) {
                     if (!window.confirm('Are you sure you want to submit the exam?')) {
                         return;
@@ -181,7 +322,7 @@
                 }
 
                 isSubmittingRef.current = true;
-
+                
                 if (timerIntervalRef.current) {
                     clearInterval(timerIntervalRef.current);
                 }
@@ -198,7 +339,7 @@
                     setScreen('results');
 
                     if (document.fullscreenElement) {
-                        document.exitFullscreen().catch(() => { });
+                        document.exitFullscreen().catch(() => {});
                     }
                 } catch (error) {
                     isSubmittingRef.current = false;
@@ -236,12 +377,13 @@
                                 <div className="bg-blue-600 text-white text-3xl font-bold py-3 px-6 rounded-lg inline-block mb-4">
                                     Yleon
                                 </div>
+                                <h1 className="text-2xl font-bold text-gray-800">Online Examination</h1>
                                 <p className="text-gray-600 mt-2">Secure Assessment Platform</p>
                             </div>
 
                             <div className={`p-4 rounded-lg mb-6 ${examStatus.isActive ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
                                 <p className={`text-center font-semibold ${examStatus.isActive ? 'text-green-700' : 'text-red-700'}`}>
-                                    {examStatus.isActive
+                                    {examStatus.isActive 
                                         ? `✓ Exam Active (Duration: ${examStatus.duration} minutes)`
                                         : '✗ No Active Exam Session'
                                     }
@@ -266,10 +408,11 @@
                                 <button
                                     onClick={register}
                                     disabled={!examStatus.isActive}
-                                    className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${examStatus.isActive
-                                            ? 'bg-blue-600 hover:bg-blue-700'
+                                    className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
+                                        examStatus.isActive 
+                                            ? 'bg-blue-600 hover:bg-blue-700' 
                                             : 'bg-gray-400 cursor-not-allowed'
-                                        }`}
+                                    }`}
                                 >
                                     {examStatus.isActive ? 'Start Examination →' : 'Exam Not Available'}
                                 </button>
@@ -277,15 +420,11 @@
 
                             <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <p className="text-xs text-yellow-800">
-                                    <strong>Important:</strong> The exam will start in fullscreen mode.
+                                    <strong>Important:</strong> The exam will start in fullscreen mode. 
                                     Do not exit fullscreen or switch tabs during the examination.
                                 </p>
                             </div>
-                            <div className="text-blue-900  text-center mt-2">
-                                © 2025 JXS Yleon. All rights reserved.
-                            </div>
                         </div>
-
                     </div>
                 );
             }
@@ -297,18 +436,114 @@
 
                 return (
                     <div className="exam-container min-h-screen bg-gray-100">
+                        {/* Security Violation Modal */}
+                        {showWarning && (
+                            <div 
+    // Reduced overall size and centered the modal
+    style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 99999,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)', // Slightly lighter overlay
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    }}
+>
+    <div 
+        style={{
+            // Switched to a standard neutral background for professionalism
+            backgroundColor: 'white', 
+            color: '#333', // Dark text color
+            borderRadius: '0.5rem', // Smaller border-radius
+            padding: '1.5rem', // Reduced padding
+            maxWidth: '350px', // Much smaller width
+            width: '90%', // Ensure it's responsive on small screens
+            textAlign: 'center',
+            boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)',
+            // Removed animation for a calmer, more professional look
+        }}
+    >
+        <div style={{ 
+            fontSize: '2.5rem', 
+            marginBottom: '0.5rem',
+            color: '#d97706' // Used a professional, attention-grabbing amber/orange instead of bright red
+        }}>
+            ⚠️
+        </div>
+        <h2 style={{ 
+            fontSize: '1.25rem', // Smaller heading
+            fontWeight: '600', // Semi-bold for professionalism
+            marginBottom: '1rem',
+            color: '#b91c1c' // A deep red for the critical title
+        }}>
+            SECURITY WARNING
+        </h2>
+        <p style={{ 
+            whiteSpace: 'pre-line', 
+            fontSize: '0.875rem', // Smaller body text for compactness
+            marginBottom: '1.5rem',
+            lineHeight: '1.4',
+            color: '#555'
+        }}>
+            {warningMessage}
+        </p>
+        <button
+            onClick={() => {
+                setShowWarning(false);
+                const isFullscreen = document.fullscreenElement || 
+                                     document.webkitFullscreenElement || 
+                                     document.mozFullScreenElement || 
+                                     document.msFullscreenElement;
+                if (!isFullscreen) {
+                    enableFullscreen();
+                }
+            }}
+            style={{
+                padding: '0.5rem 1rem', // Reduced button padding
+                backgroundColor: '#b91c1c', // Match critical color
+                color: 'white',
+                borderRadius: '0.375rem', 
+                fontWeight: '500', 
+                fontSize: '0.875rem', // Smaller font size
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseOver={(e) => e.target.style.backgroundColor = '#991b1b'}
+            onMouseOut={(e) => e.target.style.backgroundColor = '#b91c1c'}
+        >
+            I UNDERSTAND
+        </button>
+    </div>
+</div>
+                        )}
+
                         {/* Header */}
                         <div className="bg-blue-900 text-white px-6 py-3 flex justify-between items-center">
                             <div className="flex items-center space-x-4">
-                                <div className="bg-white text-blue-900 px-4 py-1 rounded font-bold">Yleon</div>
+                                <div className="bg-white text-blue-900 px-4 py-1 rounded font-bold">Yleon
+                                    </div>
                                 <span className="font-semibold">Online Examination</span>
+                                {violations > 0 && (
+                                    <span 
+                                        className="bg-red-600 px-3 py-1 rounded-full text-sm font-bold"
+                                        style={{ animation: 'pulse 2s ease-in-out infinite' }}
+                                    >
+                                        ⚠️ {violations} Violation{violations > 1 ? 's' : ''}
+                                    </span>
+                                )}
                             </div>
                             <div className="flex items-center space-x-6">
                                 <div className="text-sm">
                                     <span className="opacity-75">Candidate:</span> <span className="font-semibold">{studentName}</span>
                                 </div>
-                                <div className={`px-4 py-2 rounded font-mono text-lg font-bold ${timeRemaining <= 300 ? 'bg-red-600 animate-pulse' : 'bg-blue-800'
-                                    }`}>
+                                <div className={`px-4 py-2 rounded font-mono text-lg font-bold ${
+                                    timeRemaining <= 300 ? 'bg-red-600 animate-pulse' : 'bg-blue-800'
+                                }`}>
                                     ⏱ {formatTime(timeRemaining)}
                                 </div>
                             </div>
@@ -350,12 +585,13 @@
                                         <button
                                             key={q.id}
                                             onClick={() => setCurrentQuestionIndex(index)}
-                                            className={`w-full aspect-square rounded font-semibold text-sm ${currentQuestionIndex === index
+                                            className={`w-full aspect-square rounded font-semibold text-sm ${
+                                                currentQuestionIndex === index
                                                     ? 'bg-blue-600 text-white'
                                                     : answers[q.id]
-                                                        ? 'bg-green-500 text-white'
-                                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                }`}
+                                                    ? 'bg-green-500 text-white'
+                                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                            }`}
                                         >
                                             {index + 1}
                                         </button>
@@ -393,10 +629,11 @@
                                             {['a', 'b', 'c', 'd'].map((option) => (
                                                 <label
                                                     key={option}
-                                                    className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${answers[currentQuestion.id] === option
+                                                    className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                                                        answers[currentQuestion.id] === option
                                                             ? 'border-blue-600 bg-blue-50'
                                                             : 'border-gray-300 hover:border-blue-400'
-                                                        }`}
+                                                    }`}
                                                 >
                                                     <input
                                                         type="radio"
@@ -458,10 +695,11 @@
                                                     {['a', 'b', 'c', 'd'].map((option) => (
                                                         <label
                                                             key={option}
-                                                            className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all ${answers[q.id] === option
+                                                            className={`flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                                                                answers[q.id] === option
                                                                     ? 'border-blue-600 bg-blue-50'
                                                                     : 'border-gray-300 hover:border-blue-400'
-                                                                }`}
+                                                            }`}
                                                         >
                                                             <input
                                                                 type="radio"
@@ -565,11 +803,12 @@
                                         {scoreboard.map((item, index) => (
                                             <tr key={index} className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : ''}`}>
                                                 <td className="px-6 py-4">
-                                                    <span className={`inline-block px-3 py-1 rounded-full font-bold ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                                                            index === 1 ? 'bg-gray-300 text-gray-800' :
-                                                                index === 2 ? 'bg-orange-400 text-orange-900' :
-                                                                    'bg-gray-200 text-gray-700'
-                                                        }`}>
+                                                    <span className={`inline-block px-3 py-1 rounded-full font-bold ${
+                                                        index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                                                        index === 1 ? 'bg-gray-300 text-gray-800' :
+                                                        index === 2 ? 'bg-orange-400 text-orange-900' :
+                                                        'bg-gray-200 text-gray-700'
+                                                    }`}>
                                                         #{index + 1}
                                                     </span>
                                                 </td>
@@ -579,8 +818,9 @@
                                                     {((item.score / item.total_questions) * 100).toFixed(1)}%
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.auto_submitted ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                                                        }`}>
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                        item.auto_submitted ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                                                    }`}>
                                                         {item.auto_submitted ? '⏰ Auto' : '✓ Manual'}
                                                     </span>
                                                 </td>
@@ -609,5 +849,4 @@
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
-
 </html>

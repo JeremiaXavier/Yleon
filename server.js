@@ -62,6 +62,25 @@ async function initDatabase() {
     `);
 
     await conn.query(`
+      CREATE TABLE IF NOT EXISTS admins (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Insert default admin if not exists
+    const [admins] = await conn.query('SELECT * FROM admins LIMIT 1');
+    if (admins.length === 0) {
+      await conn.query(
+        'INSERT INTO admins (username, password) VALUES (?, ?)',
+        ['admin', 'admin123'] // Default credentials
+      );
+      console.log('Default admin created - Username: admin, Password: admin123');
+    }
+
+    await conn.query(`
       CREATE TABLE IF NOT EXISTS exam_sessions (
         id INT AUTO_INCREMENT PRIMARY KEY,
         is_active BOOLEAN DEFAULT FALSE,
@@ -131,9 +150,56 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Admin authentication middleware
+function requireAdminAuth(req, res, next) {
+  if (req.session.isAdmin) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized. Please login.' });
+  }
+}
+
 // Serve admin page
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Admin login
+app.post('/api/admin/login', async (req, res) => {
+  const { username, password } = req.body;
+  
+  try {
+    const [admins] = await pool.query(
+      'SELECT * FROM admins WHERE username = ? AND password = ?',
+      [username, password]
+    );
+    
+    if (admins.length > 0) {
+      req.session.isAdmin = true;
+      req.session.adminUsername = username;
+      res.json({ success: true, message: 'Login successful' });
+    } else {
+      res.status(401).json({ error: 'Invalid username or password' });
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Admin logout
+app.post('/api/admin/logout', (req, res) => {
+  req.session.isAdmin = false;
+  req.session.adminUsername = null;
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// Check admin auth status
+app.get('/api/admin/check-auth', (req, res) => {
+  res.json({ 
+    isAuthenticated: req.session.isAdmin || false,
+    username: req.session.adminUsername || null
+  });
 });
 
 // Check if exam is active
@@ -164,7 +230,7 @@ app.get('/api/exam-status', async (req, res) => {
 });
 
 // Set exam duration (Admin)
-app.post('/api/admin/set-duration', async (req, res) => {
+app.post('/api/admin/set-duration', requireAdminAuth, async (req, res) => {
   const { duration } = req.body;
   
   try {
@@ -180,7 +246,7 @@ app.post('/api/admin/set-duration', async (req, res) => {
 });
 
 // Start exam (Admin)
-app.post('/api/admin/start-exam', async (req, res) => {
+app.post('/api/admin/start-exam', requireAdminAuth, async (req, res) => {
   try {
     await pool.query('UPDATE exam_sessions SET is_active = TRUE, started_at = NOW()');
     res.json({ success: true, message: 'Exam started successfully' });
@@ -190,7 +256,7 @@ app.post('/api/admin/start-exam', async (req, res) => {
 });
 
 // End exam (Admin)
-app.post('/api/admin/end-exam', async (req, res) => {
+app.post('/api/admin/end-exam', requireAdminAuth, async (req, res) => {
   try {
     await pool.query('UPDATE exam_sessions SET is_active = FALSE, ended_at = NOW()');
     res.json({ success: true, message: 'Exam ended successfully' });
@@ -200,7 +266,7 @@ app.post('/api/admin/end-exam', async (req, res) => {
 });
 
 // Reset database (Admin)
-app.post('/api/admin/reset-all', async (req, res) => {
+app.post('/api/admin/reset-all', requireAdminAuth, async (req, res) => {
   try {
     await pool.query('DELETE FROM answers');
     await pool.query('DELETE FROM participants');
@@ -214,7 +280,7 @@ app.post('/api/admin/reset-all', async (req, res) => {
 });
 
 // Reset questions (Admin)
-app.post('/api/admin/reset-questions', async (req, res) => {
+app.post('/api/admin/reset-questions', requireAdminAuth, async (req, res) => {
   try {
     await pool.query('DELETE FROM answers');
     await pool.query('DELETE FROM participants');
@@ -230,7 +296,7 @@ app.post('/api/admin/reset-questions', async (req, res) => {
 });
 
 // Add question (Admin)
-app.post('/api/admin/questions', async (req, res) => {
+app.post('/api/admin/questions', requireAdminAuth, async (req, res) => {
   const { question, option_a, option_b, option_c, option_d, correct_answer } = req.body;
   
   try {
@@ -245,7 +311,7 @@ app.post('/api/admin/questions', async (req, res) => {
 });
 
 // Get all questions (Admin)
-app.get('/api/admin/questions', async (req, res) => {
+app.get('/api/admin/questions', requireAdminAuth, async (req, res) => {
   try {
     const [questions] = await pool.query('SELECT * FROM questions ORDER BY id ASC');
     res.json(questions);
@@ -255,7 +321,7 @@ app.get('/api/admin/questions', async (req, res) => {
 });
 
 // Delete question (Admin)
-app.delete('/api/admin/questions/:id', async (req, res) => {
+app.delete('/api/admin/questions/:id', requireAdminAuth, async (req, res) => {
   try {
     await pool.query('DELETE FROM questions WHERE id = ?', [req.params.id]);
     res.json({ success: true, message: 'Question deleted successfully' });
@@ -413,7 +479,7 @@ app.get('/api/scoreboard', async (req, res) => {
 });
 
 // Get statistics (Admin)
-app.get('/api/admin/stats', async (req, res) => {
+app.get('/api/admin/stats', requireAdminAuth, async (req, res) => {
   try {
     const [total] = await pool.query('SELECT COUNT(*) as count FROM participants WHERE completed_at IS NOT NULL');
     const [avgScore] = await pool.query('SELECT AVG(score) as avg FROM participants WHERE completed_at IS NOT NULL');
@@ -433,27 +499,8 @@ app.get('/api/admin/stats', async (req, res) => {
 app.listen(PORT, '0.0.0.0', async () => {
   await initDatabase();
   const localIP = getLocalIP();
-  console.log(`          $$\                               
-          $$ |                              
-$$\   $$\ $$ | $$$$$$\   $$$$$$\  $$$$$$$\  
-$$ |  $$ |$$ |$$  __$$\ $$  __$$\ $$  __$$\ 
-$$ |  $$ |$$ |$$$$$$$$ |$$ /  $$ |$$ |  $$ |
-$$ |  $$ |$$ |$$   ____|$$ |  $$ |$$ |  $$ |
-\$$$$$$$ |$$ |\$$$$$$$\ \$$$$$$  |$$ |  $$ |
- \____$$ |\__| \_______| \______/ \__|  \__|
-$$\   $$ |                                  
-\$$$$$$  |                                  
- \______/                                   `);
-  console.log(`\n                                                                                  \n
-                                                                                     ___                         _        __   __            _                        __ _                                ______       _       _     _      _ 
-  |_  |                       (_)       \ \ / /           (_)                      / _| |                               | ___ \     | |     | |   | |    | |
-    | | ___ _ __ ___ _ __ ___  _  __ _   \ V /  __ ___   ___  ___ _ __   ___  ___ | |_| |___      ____ _ _ __ ___  ___  | |_/ /_   _| |_    | |   | |_ __| |
-    | |/ _ \ '__/ _ \ '_ ` _ \| |/ _` |  /   \ / _` \ \ / / |/ _ \ '__| / __|/ _ \|  _| __\ \ /\ / / _` | '__/ _ \/ __| |  __/\ \ / / __|   | |   | __/ _` |
-/\__/ /  __/ | |  __/ | | | | | | (_| | / /^\ \ (_| |\ V /| |  __/ |    \__ \ (_) | | | |_ \ V  V / (_| | | |  __/\__ \ | |    \ V /| |_   _| |___| || (_| |
-\____/ \___|_|  \___|_| |_| |_|_|\__,_| \/   \/\__,_| \_/ |_|\___|_|    |___/\___/|_|  \__| \_/\_/ \__,_|_|  \___||___/ \_|     \_/  \__| (_)_____/\__\__,_|
-  `)
   console.log(`\n=================================`);
-  console.log(`Yleon App Server Running`);
+  console.log(`Quiz App Server Running`);
   console.log(`=================================`);
   console.log(`Local: http://localhost:${PORT}`);
   console.log(`LAN: http://${localIP}:${PORT}`);
